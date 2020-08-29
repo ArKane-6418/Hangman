@@ -115,7 +115,6 @@ def main():
     run = True
 
     while run:
-        draw(window, word)
         clock.tick(FPS)
 
         for event in pygame.event.get():
@@ -132,7 +131,7 @@ def main():
                             guessed.append(ltr)
                             if ltr not in word.replace(" ", ""):
                                 hangman_status += 1
-        
+        draw(window, word)
         
         won = True
         for letter in word.replace(" ", ""):
@@ -142,6 +141,7 @@ def main():
 
         if won:
             run = False
+            pygame.time.delay(1000)
             final_message("You Won!")
             if play_again(clock):
                 won = False
@@ -155,6 +155,8 @@ def main():
 
         
         if hangman_status == 6:
+            run = False
+            pygame.time.delay(1000)
             final_message("You Lost!")
             if play_again(clock):
                 won = False
