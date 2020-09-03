@@ -1,10 +1,11 @@
 import pygame
 import math
 import random
+import json
 
 # Initializing game and window dimensions
 pygame.init()
-WIDTH, HEIGHT = 800, 500
+WIDTH, HEIGHT = 800, 600
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Hangman")
 
@@ -29,13 +30,14 @@ for i in range(26):
 # Loading images
 images = []
 for i in range(7):
-    image = pygame.image.load("hangman" + str(i) +".png")
+    image = pygame.image.load("./hangman_images/hangman" + str(i) +".png")
     images.append(image)
 
 
 # Game Variables
 hangman_status = 0
-word_list = ["HELLO WORLD", "IDE", "PYGAME", "PYTHON", "JAVA"]
+with open("word_list.json", "r") as file:
+    word_list = json.load(file)
 guessed = []
 
 # Colours 
@@ -43,7 +45,9 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 
-def draw(window, word):
+def draw(window, word) -> None:
+    """The main draw function for this program.
+    """
     window.fill(WHITE)
     text = TITLE_FONT.render("HANGMAN", 1, BLACK)
     window.blit(text, (WIDTH // 2 - text.get_width() // 2, 20))
@@ -68,15 +72,20 @@ def draw(window, word):
     window.blit(images[hangman_status], (150, 100))
     pygame.display.update()
 
-def final_message(message):
+def final_message(window, message) -> None:
+    """Draws a new screen with <message>"""
     window.fill(WHITE)
     text = WORD_FONT.render(message, 1, BLACK)
-    window.blit(text, (WIDTH/2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+    window.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
     pygame.display.update()
     pygame.time.delay(3000)
 
 
-def play_again(clock):
+def play_again(window, clock) -> bool:
+    """Draws a new screen, asking the player if they want to play again.
+
+    Return True if the player clicks "Yes" and False if the player clicks "No"
+    """
     wait = True
     option = True
     window.fill(WHITE)
@@ -105,14 +114,53 @@ def play_again(clock):
         pygame.quit()
     return option
 
+def start_screen(window) -> None:
+    """Draws the starting screen when the program starts.
+    """
+    window.fill(WHITE)
+    title_text = TITLE_FONT.render("Welcome to Hangman!", 1, BLACK)
+    text = WORD_FONT.render("Press any key to continue", 1, BLACK)
+    window.blit(title_text, (WIDTH // 2 - (title_text.get_width() // 2), 40))
+    window.blit(text, (WIDTH // 2 - (text.get_width() // 2), 300))
+    pygame.display.update()
+    wait_for_key()
+
+
+def wait_for_key():
+    """Waits for the player to press a key for the game to begin.
+    """
+    clock = pygame.time.Clock()
+    wait = True
+    while wait:
+        clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                wait = False
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                wait = False
+
+def correct_word(window, word: str) -> None:
+    """Draws a screen displaying the correct word if the player loses the game.
+    """
+    window.fill(WHITE)
+    text = WORD_FONT.render(f"The correct word was {word}.", 1, BLACK)
+    window.blit(text, (WIDTH/2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+    pygame.display.update()
+    pygame.time.delay(2500)
+
 
 def main():
+    """The main function of the program.
+    """
     global hangman_status
     # Setting up the game loop
-    word = random.choice(word_list)
+    word = random.choice(word_list).upper()
     FPS = 60
     clock = pygame.time.Clock()
     run = True
+
+    start_screen(window)
 
     while run:
         clock.tick(FPS)
@@ -142,12 +190,12 @@ def main():
         if won:
             run = False
             pygame.time.delay(1000)
-            final_message("You Won!")
+            final_message(window, "You Won!")
             if play_again(clock):
                 won = False
                 run = True
                 hangman_status = 0
-                word = random.choice(word_list)
+                word = random.choice(word_list).upper()
                 guessed.clear()
                 for letter in letters:
                     letter[3] = True
@@ -157,12 +205,14 @@ def main():
         if hangman_status == 6:
             run = False
             pygame.time.delay(1000)
-            final_message("You Lost!")
-            if play_again(clock):
+            final_message(window, "You Lost!")
+            correct_word(window, word)
+
+            if play_again(window, clock):
                 won = False
                 run = True
                 hangman_status = 0
-                word = random.choice(word_list)
+                word = random.choice(word_list).upper()
                 guessed.clear()
                 for letter in letters:
                     letter[3] = True
