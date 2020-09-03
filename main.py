@@ -153,6 +153,7 @@ def correct_word(window, word: str) -> None:
 def main():
     """The main function of the program.
     """
+    
     global hangman_status
     # Setting up the game loop
     word = random.choice(word_list).upper()
